@@ -110,10 +110,15 @@ bash('block', 'pnpm run seed:live --scenario retail');
 bash('pass', 'pnpm eval:live', undefined, { ...cleanEnv, CLAUDE_ALLOW_PAID: '1' });
 bash('pass', 'pnpm eval');
 
-console.log('\n== Cloud CLIs ==');
+console.log('\n== Cloud CLIs and remote shells ==');
 bash('ask', 'aws s3 ls');
 bash('ask', 'terraform apply');
+bash('ask', 'ssh ubuntu@203.0.113.10');
+bash('ask', 'scp dump.sql ubuntu@203.0.113.10:/tmp');
+bash('ask', 'rsync -av dist/ ubuntu@203.0.113.10:/srv/app');
 bash('pass', 'cat infra/aws-notes.md');
+bash('pass', 'cat docs/ssh-notes.md');
+bash('pass', 'ssh-keygen -l -f key.pub');
 
 console.log('\n== Recursive deletes & Docker data (ask) ==');
 bash('ask', 'rm -rf dist');

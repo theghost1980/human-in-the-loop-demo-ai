@@ -92,7 +92,7 @@ Operating rules for every AI coding agent working in this repository (Claude Cod
 
 - **No real calls to paid APIs** (LLMs, cloud, third-party) without explicit approval. Tests use mocked or recorded responses by default.
 - Scripts that spend money end in **`:live`**; the hook blocks them unless the human enables them.
-- Cloud CLIs (`aws`, `gcloud`, `terraform`, …) always require the human's confirmation.
+- Cloud CLIs (`aws`, `gcloud`, `terraform`, …) and remote shells or copies (`ssh`, `scp`, `rsync`) always require the human's confirmation.
 
 ## 10. Data safety
 
@@ -123,6 +123,7 @@ Claude Code enforces part of these rules with hooks in `.claude/hooks/` (configu
 | Add/update dependency, `dlx`, unknown `npx` | Human confirms | — |
 | Paid scripts (`:live`) | Blocked | `CLAUDE_ALLOW_PAID=1` |
 | Cloud CLIs | Human confirms | — |
+| Remote shells and copies (`ssh`, `scp`, `rsync`) | Human confirms | — |
 | Destructive DB operations | Blocked | `CLAUDE_ALLOW_DB_DESTRUCTIVE=1` |
 | Recursive deletes, Docker volume removal / prune | Human confirms | — |
 | Reading/printing secret files | Blocked | none |

@@ -8,7 +8,7 @@
   "protectedBranches": ["main", "master"],
 
   "blockedCli": ["vercel", "netlify"],
-  "askCli": ["aws", "gcloud", "az", "terraform", "flyctl", "railway"],
+  "askCli": ["aws", "gcloud", "az", "terraform", "flyctl", "railway", "ssh", "scp", "rsync"],
 
   "dbClients": ["psql", "mysql", "mariadb", "mongosh", "mongo", "sqlite3", "pgcli", "supabase", "prisma", "drizzle-kit"],
 

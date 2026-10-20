@@ -18,7 +18,7 @@ CLAUDE.md                          Imports AGENTS.md + Claude Code notes
     guard-bash.cjs                 Git, package managers, deps, paid scripts, cloud CLIs, deletes, Docker, DB, secrets
     guard-secret-files.cjs         Blocks Read/Edit/Write/Grep on secret files
     session-reminder.cjs           Re-injects hard rules after compaction
-    test-hooks.mjs                 Cross-platform hook tests (99 cases)
+    test-hooks.mjs                 Cross-platform hook tests (104 cases)
   skills/
     clarify-before-build/          Clarify goal and approach before a new feature
     plan-before-change/            Short approved plan for multi-file / risky changes
@@ -42,6 +42,7 @@ docs/ai/incidents.md               Lessons-learned log that feeds new guardrails
 | Add / update dependency, `dlx`, unknown `npx` | ❓ Human confirms (after vetting) |
 | Paid scripts (`*:live`) | ⛔ Blocked (escape hatch) |
 | Cloud CLIs (`aws`, `gcloud`, `terraform`, …) | ❓ Human confirms |
+| Remote shells and copies (`ssh`, `scp`, `rsync`) | ❓ Human confirms |
 | Recursive deletes, `docker compose down -v`, `docker volume rm/prune`, `docker system prune` | ❓ Human confirms |
 | `DELETE` / `TRUNCATE` / `DROP` / `migrate reset` | ⛔ Blocked (escape hatch) |
 | Reading or printing `.env`, keys, credentials | ⛔ Blocked |
