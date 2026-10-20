@@ -1,0 +1,15 @@
+---
+description: Project rules for AI agents — single source of truth is AGENTS.md
+alwaysApply: true
+---
+
+Before generating, editing or suggesting any code, read and follow **`AGENTS.md`** at the repository root. It is the single source of truth for scope, architecture, git, dependencies, secrets and costs.
+
+Important: the hooks in `.claude/hooks/` only run inside Claude Code. In Cursor nothing stops you mechanically — **you are the only safety layer**. In particular:
+
+- Never commit, push or merge unless the human asks; never on `main`/`master`.
+- Never read or print `.env*`, keys or credential files.
+- No new dependencies without the vetting report and approval.
+- No paid API/cloud calls and no destructive DB or git operations without explicit approval.
+
+If you cannot access `AGENTS.md`, stop and tell the human.

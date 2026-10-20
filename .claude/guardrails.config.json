@@ -1,0 +1,31 @@
+{
+  "$comment": "Per-project knobs for the guardrail hooks. Edit this file, not the hooks.",
+
+  "packageManager": "pnpm",
+  "otherPackageManagers": ["npm", "yarn", "pnpm", "bun"],
+  "allowedExecutables": ["tsx", "tsc", "vitest", "eslint", "prettier", "next"],
+
+  "protectedBranches": ["main", "master"],
+
+  "blockedCli": ["vercel", "netlify"],
+  "askCli": ["aws", "gcloud", "az", "terraform", "flyctl", "railway"],
+
+  "dbClients": ["psql", "mysql", "mariadb", "mongosh", "mongo", "sqlite3", "pgcli", "supabase", "prisma", "drizzle-kit"],
+
+  "paidScriptPattern": ":live\\b",
+
+  "secretPatterns": [".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "id_rsa*", "id_ed25519*", "credentials.json", "service-account*.json", ".npmrc", ".pypirc"],
+  "secretAllow": [".env.example", ".env.sample", ".env.template", ".env.dist"],
+
+  "docs": {
+    "devLog": "docs/dev-log.md",
+    "roadmap": "docs/ROADMAP.md",
+    "incidents": "docs/ai/incidents.md"
+  },
+
+  "commands": {
+    "typecheck": "pnpm typecheck",
+    "lint": "pnpm lint",
+    "test": "pnpm test"
+  }
+}
