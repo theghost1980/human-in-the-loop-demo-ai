@@ -23,6 +23,32 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · package skeletons
+
+**Branch:** `feat/phase0-monorepo-scaffold`
+**Done:**
+- `packages/core` (`@hexis/core`): pure TypeScript package, no dependencies, exported as source.
+- `apps/api` (`@hexis/api`): Fastify with `buildApp()` and a server entry that listens on `PORT` (default 3001); no routes yet.
+- `apps/web` (`@hexis/web`): Next.js App Router with a placeholder page.
+- `vitest` at the root; every package has `typecheck` and `test` scripts.
+
+**Decisions:**
+- All new dependencies pinned to versions older than 7 days: `next` 16.4.0, `react` / `react-dom` 19.3.0, `fastify` 5.12.7, `vitest` 4.1.11, `tsx` 4.23.15, `@types/node` 24.19.2 (matches the Node 24 runtime), `@types/react` / `@types/react-dom` 19.3.0.
+- Vitest 4 rather than 5: version 5 needs `vite` as a direct dependency.
+- `core` has no build step; the web app will need `transpilePackages` when it starts importing it.
+- The API reads `PORT` directly until Zod env validation lands (separate Phase 0 item).
+- No `next.config.ts` yet; Next works without one.
+
+**Verification:** typecheck ✅ · lint ✅ · format:check ✅ · audit ✅ · `next build` ✅ · API starts and answers (404 on `/`, no routes) ✅ · tests: none yet (no logic to test).
+
+**Human actions needed:**
+- Delete `LEEME-PRIMERO.md` at the end of Phase 0.
+
+**Next:**
+- `GET /health`, env validation with Zod and `.env.example`, `LICENSE`, CI.
+
+---
+
 ## 2026-10-20 — Phase 0 · pnpm monorepo scaffold
 
 **Branch:** `feat/phase0-monorepo-scaffold`
