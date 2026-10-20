@@ -23,6 +23,30 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · env validation
+
+**Branch:** `feat/phase0-env-validation`
+**Done:**
+- Zod schema for the API environment (`NODE_ENV`, `PORT`) in `apps/api/src/shared/config/env.ts`; `loadEnv()` runs at startup in `index.ts`.
+- `dev` script loads `../../.env` when it exists (`--env-file-if-exists`); `.env.example` at the repo root.
+- 10 tests for `loadEnv` (defaults, coercion, invalid `PORT` and `NODE_ENV`, rejected values never echoed).
+
+**Decisions:**
+- `zod` 4.6.7 is the only new dependency.
+- Error messages name the wrong variable and the reason but never its value, so future secrets cannot leak into logs.
+- Only variables the app reads today are listed; `DATABASE_URL`, `ANTHROPIC_API_KEY`, etc. arrive with the features that use them.
+- `.env.example` lives at the root (as in the plan) and `.env` is read from the root too.
+
+**Verification:** typecheck ✅ · lint ✅ · format:check ✅ · audit ✅ · tests ✅ (12 passing) · live startup: an invalid `PORT` exits with a clear message, a missing `.env` falls back to defaults, an env file is honoured through `tsx watch`.
+
+**Human actions needed:**
+- `.env.example` was created by the human: the `Read(./.env.*)` deny rule in `.claude/settings.json` also blocks it for the agent (the secrets hook already allows it).
+
+**Next:**
+- `LICENSE`, CI.
+
+---
+
 ## 2026-10-20 — Phase 0 · GET /health
 
 **Branch:** `feat/phase0-api-health`
