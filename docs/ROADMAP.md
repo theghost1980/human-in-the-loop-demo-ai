@@ -10,7 +10,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [x] `apps/web`, `apps/api`, `packages/core` skeletons
 - [x] `GET /health` endpoint
 - [x] `.gitignore`, `.env.example`, env validation with Zod
-- [ ] `LICENSE` (official PolyForm Noncommercial 1.0.0 text) + README license note
+- [x] `LICENSE` (official PolyForm Noncommercial 1.0.0 text) + README license note
 - [ ] CI workflow: typecheck + lint + test
 - [ ] `infra/docker-compose.yml` (api, postgres, caddy) + `Caddyfile`
 - [ ] 👤 AWS: budget alert, credits expiry, EC2, Elastic IP, security group, Docker

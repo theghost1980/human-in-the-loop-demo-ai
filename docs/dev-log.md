@@ -23,6 +23,25 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · LICENSE
+
+**Branch:** `feat/phase0-env-validation`
+**Done:**
+- `LICENSE` at the repo root with the official PolyForm Noncommercial License 1.0.0 text; the README already carried the license note and links to it.
+
+**Decisions:**
+- The text is the unmodified official file, downloaded by the human from the `1.0.0` tag of `polyformproject/polyform-licenses`; no `Required Notice` line was added (the README keeps the copyright line).
+
+**Verification:** the file is byte-identical to the official one: git blob hash `5ecc88cfc4b1cff608ed640efe913c9dd97935c3` and size 4563 bytes match the values GitHub reports for `PolyForm-Noncommercial-1.0.0.md` at tag `1.0.0`. It starts with the official title, has the 15 sections (Acceptance to Definitions) and LF line endings. format:check ✅.
+
+**Human actions needed:**
+- None.
+
+**Next:**
+- CI workflow (typecheck, lint, test).
+
+---
+
 ## 2026-10-20 — Phase 0 · env validation
 
 **Branch:** `feat/phase0-env-validation`
