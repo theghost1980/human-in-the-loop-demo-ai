@@ -23,6 +23,28 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · GET /health
+
+**Branch:** `feat/phase0-api-health`
+**Done:**
+- `GET /health` returns `{ "status": "ok" }` from `apps/api/src/features/health/routes.ts`, registered in `buildApp()`.
+- `buildApp()` accepts `{ logger }` so tests run without log noise; two tests with `app.inject()` (200 + body, unknown route stays 404).
+- `.gitattributes` (`* text=auto eol=lf`): LF in the working tree on every OS.
+
+**Decisions:**
+- No new dependencies; `/health` is a plain liveness check (no DB or LLM calls) so it can back Docker and Caddy health checks later.
+- Line endings: on Windows, `core.autocrlf=true` checked files out as CRLF and `prettier --check` failed on 15 files (content was fine). Forcing LF through `.gitattributes` fixes it for every clone; Prettier keeps its default `endOfLine`. The 20 CRLF working-tree files were converted to LF; git sees no content change.
+
+**Verification:** typecheck ✅ · lint ✅ · format:check ✅ · tests ✅ (2 passing) · audit ✅ · hooks suite ✅ (99/99) · live `GET /health` 200 ✅ and unknown route 404 ✅.
+
+**Human actions needed:**
+- None.
+
+**Next:**
+- Env validation with Zod and `.env.example`, `LICENSE`, CI.
+
+---
+
 ## 2026-10-20 — Phase 0 · package skeletons
 
 **Branch:** `feat/phase0-monorepo-scaffold`
