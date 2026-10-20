@@ -5,6 +5,8 @@
 
 Portfolio project by **Saturno Mangieri**. Source available under **PolyForm Noncommercial 1.0.0**.
 
+**Naming:** *Hexis Ops* is the product name. The GitHub repository is `theghost1980/human-in-the-loop-demo-ai`; the demo is deployed on `hexis.fyi`, a domain owned by the author: `ops.hexis.fyi` (web) and `api.hexis.fyi` (API).
+
 ---
 
 ## 1. Goals
@@ -48,8 +50,12 @@ Portfolio project by **Saturno Mangieri**. Source available under **PolyForm Non
 | AI | Anthropic SDK — a fast/cheap model by default, a stronger model for escalation (exact model IDs and prices verified in Anthropic docs at implementation time) |
 | Tests | Vitest |
 | CI | GitHub Actions |
-| Hosting | Vercel (web), AWS EC2 + Docker Compose + Caddy (api, db) |
+| Hosting | Vercel (web), AWS EC2 `t4g.small` arm64 + Ubuntu 24.04 + Docker Compose + Caddy (api, db) in eu-north-1 |
+| Delivery | GitHub Actions (arm64 runner) builds the API image → GHCR (public) → server pulls; manual one-line deploy |
+| Server access | AWS Systems Manager Session Manager (no SSH port open) |
 | Domain | `ops.hexis.fyi` (web), `api.hexis.fyi` (api) — DNS at Namecheap |
+
+Infrastructure details and their rationale: [`docs/infra/DECISIONS.md`](infra/DECISIONS.md). Step-by-step setup: [`docs/infra/RUNBOOK.md`](infra/RUNBOOK.md).
 
 ### Layering rules
 
@@ -61,15 +67,17 @@ Portfolio project by **Saturno Mangieri**. Source available under **PolyForm Non
 ### Repository layout
 
 ```
-hexis-ops/
+human-in-the-loop-demo-ai/     # product name: Hexis Ops
 ├── apps/
 │   ├── web/src/{features,shared}
 │   └── api/src/{features,shared}
 ├── packages/
 │   └── core/src/{engine,scenarios}
-├── infra/                 docker-compose.yml, Caddyfile, deploy notes
-├── docs/                  PLAN.md, ROADMAP.md, dev-log.md, ai/ (guardrails docs, incidents log)
-├── .github/workflows/     ci.yml
+├── infra/                 compose.yaml, compose.dev.yaml, Caddyfile, .env.*.example, scripts/, systemd/
+├── docs/                  PLAN.md, ROADMAP.md, dev-log.md, infra/ (DECISIONS, RUNBOOK), ai/ (guardrails docs, incidents log)
+├── .github/workflows/     ci.yml, api-image.yml
+├── .dockerignore
+├── .gitattributes         LF endings everywhere (`* text=auto eol=lf`)
 ├── .claude/               AI guardrails: hooks, skills, settings
 ├── .cursor/rules/         Cursor pointer to AGENTS.md (unused today)
 ├── AGENTS.md              Rules for every AI agent (source of truth)
@@ -127,13 +135,17 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 - `.gitignore` (includes `.env*` except `.env.example`, `CLAUDE.local.md`), `.env.example`, env validation with Zod.
 - **AI guardrails** (`AGENTS.md`, `CLAUDE.md`, `.claude/` hooks + skills, `docs/ai/`): protected branches, secrets, dependency and cost control enforced by hooks in Bash and PowerShell; checked with `node .claude/hooks/test-hooks.mjs`.
 - CI: typecheck + lint + test on every push and PR.
-- **AWS (human):** budget alert, credits expiry check, EC2 (small instance), Elastic IP, security group (80/443 public, 22 own IP only), Docker + Compose installed.
-- **Anthropic (human):** dedicated API key for this project, monthly spend limit set in the console.
-- **DNS (human, Namecheap):** `A api → Elastic IP`, `CNAME ops → Vercel`.
-- `infra/docker-compose.yml` (api, postgres, caddy) + `Caddyfile`.
 - First commit on `main` (scaffold); from here on, work in branches.
+- **API container** (agent): multi-stage `apps/api/Dockerfile` (`node:24-bookworm-slim`, build context = repo root, every workspace `package.json` copied so the frozen install matches the lockfile, runtime as non-root `node` user, Node-based healthcheck) + root `.dockerignore`. The API is **bundled with esbuild** into `dist/server.mjs` by `apps/api/scripts/build.ts` (run with `tsx`; esbuild added only after dependency-vetting); dev keeps `tsx watch`. Env schema gains only `HOST` (`0.0.0.0` in containers); Fastify `trustProxy` on; pino JSON to stdout.
+- **Image pipeline** (agent): `.github/workflows/api-image.yml` on the free `ubuntu-24.04-arm` runner, using only the Docker CLI (`login` / `build` / `push` with `GITHUB_TOKEN`, no third-party actions) → `ghcr.io/theghost1980/hexis-ops-api` tagged `main` and `sha-<short>`, labelled `org.opencontainers.image.source` → this repository; package visibility public (no secrets in the image).
+- **Compose & Caddy** (agent): `infra/compose.yaml` — `caddy` (only service publishing 80/443, cert volumes), `api` (no published ports), `postgres:18` (no published ports, volume at `/var/lib/postgresql`; unused until Phase 1, it validates the volume, the memory limit and the healthcheck), healthchecks, `restart: unless-stopped`, memory limits. No service uses `env_file`: each declares only its own variables in `environment:`; non-secret constants are literals or `${VAR:-default}`, while `infra/.env` holds only secrets and per-environment values (`API_DOMAIN`, `ACME_EMAIL`, `POSTGRES_*`, future keys). `infra/compose.dev.yaml` — Postgres on `127.0.0.1:5432` for local `pnpm dev`. `infra/Caddyfile` driven by `API_DOMAIN` (`api.hexis.fyi` in prod → automatic HTTPS; `http://localhost` locally), SSE-friendly proxy. `infra/env.production.example` and `infra/env.local.example` (no leading dot: the agent guardrails block `.env.*` files), `infra/scripts/deploy.sh` (git pull → compose pull → up -d → prune; no database dump until Phase 1).
+- **AWS (human, Free plan, eu-north-1):** root MFA without access keys; admin IAM user with MFA; budget USD 30/month (alerts 50/80/100 % + forecast, credits excluded); Cost Anomaly Detection (USD 5); `project=hexis-ops` tags; instance role with `AmazonSSMManagedInstanceCore`; security group 80/443 only (no SSH — access through Session Manager; emergency key pair kept in the password manager); `t4g.small` Ubuntu 24.04 arm64, 20 GiB gp3 encrypted, IMDSv2 required; Elastic IP; host setup (2 GiB swap, Docker Engine + Compose plugin from Docker's repo, Docker log rotation, unattended security upgrades with 04:00 reboot).
+- **DNS (human, Namecheap):** `A api → Elastic IP` (5-min TTL during setup), `CNAME ops →` the target Vercel shows. No AAAA, no CAA.
+- **First deploy (human):** `git clone` of the public repo to `/opt/hexis/app`, root-only `infra/.env` (mode 600) filled from the password manager, `docker compose up -d`.
+- **Vercel (human):** Root Directory `apps/web`, Node 24.x, `NEXT_PUBLIC_API_URL=https://api.hexis.fyi`, domain `ops.hexis.fyi`.
+- **Anthropic (human):** dedicated production API key, monthly spend limit set in the console.
 
-**Done when:** `https://api.hexis.fyi/health` returns OK over HTTPS, `https://ops.hexis.fyi` serves a placeholder page, CI is green.
+**Done when:** `https://api.hexis.fyi/health` returns OK over HTTPS from a fresh image pulled from GHCR, port 5432 is closed from the internet, `https://ops.hexis.fyi` serves the placeholder page, CI and the image workflow are green, and the runbook steps are recorded in the dev-log.
 
 ### Phase 1 — Agent engine (backend)
 
@@ -142,6 +154,7 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 - `packages/core/engine`: scenario contract, pipeline steps, decision rules, grounding verification, model-routing policy — pure and unit-tested.
 - `apps/api/shared/llm`: Anthropic client wrapper (structured output, tool use, retries with backoff, token/cost accounting). Mockable.
 - `apps/api/shared/db`: Kysely + migrations. Tables: `scenarios`, `runs`, `documents`, `model_calls`, `proposals`, `review_decisions`.
+- **Migrations in the deployed stack:** `DATABASE_URL` joins the env schema; a one-shot `migrate` service in `infra/compose.yaml` runs `dist/migrate.mjs` (Kysely with a custom, statically imported `MigrationProvider`, so migrations are bundled); forward-only; `deploy.sh` takes a `pg_dump` before running migrations.
 - Mock ERP tools for the first scenario: `lookupProduct`, `getCurrentPrice`, `getSupplierHistory`.
 - Batch runs: bounded concurrency, SSE progress, **idempotency** (same document twice ⇒ no duplicate effects).
 - **First scenario: 🛒 Supplier price changes** (retail/supply chain) with ~15 realistic sample emails (clean, ambiguous, malformed, multi-item, one prompt-injection attempt).
@@ -159,6 +172,7 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 - **Audit history:** who decided what and when, with versions.
 - **Cost & performance panel:** total spend, cost per document, automation rate, default vs escalated model share.
 - Quality bar: responsive, dark mode, empty/loading/error states, basic accessibility.
+- **API CORS:** `CORS_ORIGINS` allow-list (Zod-validated) as soon as the browser calls the API; `http://localhost:3000` only in development.
 
 **Done when:** someone with no context opens the app, clicks *Load sample data* and understands the product within a minute.
 
@@ -166,15 +180,17 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 
 **Goal:** online, safe, and impossible to drain the credits.
 
-- Production Docker Compose: restart policies, health checks, structured logs (pino).
-- Daily Postgres backup to S3.
+- **Production hardening of the deployed stack:** verified restart policies, healthchecks and memory limits under load; pino JSON logs with Docker log rotation; rollback by `API_TAG=sha-<short>`.
+- **Backups:** S3 bucket (Block Public Access, SSE-S3, 14-day lifecycle, `project=hexis-ops`); instance role gets an inline policy limited to that bucket; AWS CLI v2 on the host; daily systemd timer runs `infra/scripts/backup.sh` (`pg_dump -Fc` → S3); `infra/scripts/restore-test.sh` restores the latest dump into a throwaway container — run once at setup and monthly. No scheduled EBS snapshots (host is reproducible); one manual snapshot only before risky host changes.
 - **Credit protection:**
   - Sample data served from **precomputed cached results** (zero model cost).
-  - Custom input: **per-IP rate limit**, **global daily spend cap** enforced in the app (falls back to cache-only mode when reached), max input size.
+  - Custom input: **per-IP rate limit** (correct client IP via `trustProxy` behind Caddy), **global daily spend cap** enforced in the app (falls back to cache-only mode when reached), max input size.
   - **Kill switch** env flag to disable model calls instantly.
-- Vercel production deploy with `NEXT_PUBLIC_API_URL=https://api.hexis.fyi`; CORS locked to `ops.hexis.fyi`.
+- **Web:** Vercel production deploy with `NEXT_PUBLIC_API_URL=https://api.hexis.fyi`; production `CORS_ORIGINS` = `https://ops.hexis.fyi` only (previews not allowed against the production API).
+- **Security headers** on API responses; re-check the Phase 0 security baseline (DECISIONS.md §15).
+- **Cost review:** replace every NOT VERIFIED price in DECISIONS.md §4 with real numbers from the bill; confirm credits will last to the decision point.
 
-**Done when:** both domains work in production, and a simulated abuse burst is blocked without spending credits.
+**Done when:** both domains work in production, a simulated abuse burst is blocked without spending credits, a backup exists in S3 and the restore test passes.
 
 **✉️ Milestone — first application send-out (e.g., Duvo):** 2-minute video (problem → demo → one design decision), link with the retail scenario preselected.
 
@@ -210,10 +226,15 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 
 | Resource | Credit | Planned use |
 |---|---|---|
-| AWS | $200 | Small EC2 + S3 backups; budget alert set in Phase 0 |
+| AWS | $200 (Free plan) | `t4g.small` + 20 GiB gp3 + Elastic IP + S3 backups ≈ **$18/month** (prices partly NOT VERIFIED, see `docs/infra/DECISIONS.md` §4) ≈ $110 over 6 months |
 | Anthropic API | $100 | Development and manual live evals, mostly on the cheaper model; public demo near-zero via cache + caps |
 | Vercel | Free tier | Frontend |
+| GitHub | Free (public repo) | CI and arm64 image builds; GHCR public package |
 | Domain | Owned | `hexis.fyi` (renews May 2027) |
+
+**AWS Free plan timeline.** On 2026-10-20 the plan had 181 days left → it ends ≈ **2027-04-19** (or earlier if credits run out). The Free plan cannot generate charges: at the end the account is **suspended** (data kept 90 days, then erased) unless upgraded to Paid, which keeps the remaining credits.
+
+**Demo lifetime:** until hired. **🗓️ Decision point 2027-04-01:** either upgrade to Paid (if the verified monthly cost is affordable; check in Billing → Credits how long the remaining credits last afterwards) or export the database and configuration, run the full shutdown list (`docs/infra/DECISIONS.md` §14) and document it in the dev-log. Credit pace target: ≥ $80 left on 2027-03-01.
 
 ---
 
@@ -230,3 +251,7 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 - Observability (trace views, metrics, alerts)
 - Portfolio polish (ADRs, case-study page, per-scenario videos)
 - Infra learning track (ECS Fargate + RDS + Terraform; GCP Cloud Run variant)
+- Automated deploys from GitHub Actions (OIDC + SSM send-command)
+- Secrets in SSM Parameter Store instead of a hand-written `.env`
+- Scheduled EBS snapshots (Data Lifecycle Manager), WAF, GuardDuty/Security Hub, centralized logging
+- IPv6-only API to avoid the public IPv4 charge

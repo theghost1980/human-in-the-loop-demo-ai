@@ -12,17 +12,37 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [x] `.gitignore`, `.env.example`, env validation with Zod
 - [x] `LICENSE` (official PolyForm Noncommercial 1.0.0 text) + README license note
 - [x] CI workflow: typecheck + lint + test
-- [ ] `infra/docker-compose.yml` (api, postgres, caddy) + `Caddyfile`
-- [ ] 👤 AWS: budget alert, credits expiry, EC2, Elastic IP, security group, Docker
-- [ ] 👤 Anthropic: project API key + monthly spend limit
-- [ ] 👤 Namecheap DNS: `api` A record, `ops` CNAME
-- [ ] 👤 Vercel project linked to `apps/web`
+- [ ] Dependency-vetting report for `esbuild` (approved by human) → add as `apps/api` devDependency
+- [ ] API: env schema gains `HOST` only; `trustProxy`; pino JSON logs
+- [ ] API: `scripts/build.ts` (run with `tsx`; esbuild bundle → `dist/server.mjs`) + `build` script; `node dist/server.mjs` serves `/health` locally
+- [ ] `apps/api/Dockerfile` (multi-stage, non-root, healthcheck, all workspace manifests copied) + root `.dockerignore` (`apps/web/*` + `!apps/web/package.json`); local `docker build` OK
+- [x] `.gitattributes` (`* text=auto eol=lf`: LF everywhere)
+- [ ] `infra/compose.yaml` (caddy, api, postgres:18; per-service `environment`, no `env_file`) + `infra/compose.dev.yaml` (postgres on 127.0.0.1)
+- [ ] `infra/Caddyfile` (`API_DOMAIN`, SSE-friendly proxy) + `infra/env.production.example` + `infra/env.local.example`
+- [ ] `infra/scripts/deploy.sh` (git pull → compose pull → up -d → prune; the pre-migration dump arrives in Phase 1)
+- [ ] Local smoke test: `docker compose -f infra/compose.yaml --env-file infra/.env.local up --build` → `http://localhost/health` OK
+- [ ] `.github/workflows/api-image.yml` (ubuntu-24.04-arm; Docker CLI + `GITHUB_TOKEN`, no third-party actions → GHCR `main` + `sha-<short>`, label → this repo)
+- [ ] `docs/infra/DECISIONS.md` + `docs/infra/RUNBOOK.md` in the repo
+- [ ] 👤 AWS account safety: root MFA + no keys, admin IAM user with MFA (RUNBOOK A1–A2)
+- [ ] 👤 AWS Budgets USD 30 (credits excluded) + Cost Anomaly Detection USD 5; note credit balance and end date (A3)
+- [ ] 👤 IAM role `hexis-ec2-role` (SSM) + security group 80/443 + emergency key pair (B1–B3)
+- [ ] 👤 (Optional) Short test: launch `t4g.small` without Elastic IP, check "Free tier eligible" + Session Manager, terminate (B3b)
+- [ ] 👤 EC2 `t4g.small` Ubuntu 24.04 arm64, 20 GiB gp3 encrypted, IMDSv2 + Elastic IP (B4–B5) — launch only when the image workflow is green
+- [ ] 👤 Session Manager access + host setup: swap, Docker + Compose, log rotation, unattended upgrades (B6–B7)
+- [ ] 👤 Namecheap: `A api → Elastic IP` (C1)
+- [ ] 👤 GHCR package `hexis-ops-api` set to public after the first image build (C2)
+- [ ] 👤 First deploy: clone to `/opt/hexis/app`, `infra/.env` (600, root), `docker compose up -d` (C3)
+- [ ] 👤 Vercel project (root `apps/web`, Node 24.x, `NEXT_PUBLIC_API_URL`) + `ops.hexis.fyi` + Namecheap CNAME (C4)
+- [ ] 👤 Anthropic: production API key + monthly spend limit (C5)
+- [ ] 👤 Activate `project` cost allocation tag; record IDs, IP and credit end date in dev-log (C6)
+- [ ] 👤 Calendar reminders: 2027-03-01 credit pace check (≥ $80 left) · 2027-04-01 end-of-free-plan decision
 - [x] AI guardrails installed: `AGENTS.md`, `CLAUDE.md`, `.claude/` (settings, hooks, 8 skills), `docs/ai/`
 - [x] Guardrail hooks cover Bash + PowerShell; `node .claude/hooks/test-hooks.mjs` passes (99 cases)
 - [x] Guardrails also confirm recursive deletes and Docker volume removal
+- [x] Guardrails also confirm `ssh`, `scp` and `rsync` (+ hook test cases)
 - [ ] 👤 Verify the hooks in a fresh Claude Code session (`npm --version` must be blocked in both Bash and PowerShell)
 - [ ] First commit on `main` → all further work on branches
-- [ ] ✅ Done: `api.hexis.fyi/health` over HTTPS, `ops.hexis.fyi` placeholder, CI green
+- [ ] ✅ Done: `api.hexis.fyi/health` over HTTPS from the GHCR image, port 5432 closed, `ops.hexis.fyi` placeholder, CI + image workflow green
 
 ## Phase 1 — Agent engine (backend)
 - [ ] `core/engine`: scenario contract
@@ -32,6 +52,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [ ] `core/engine`: model-routing policy (default → escalation)
 - [ ] `api/shared/llm`: Anthropic wrapper (structured output, tools, retries, cost accounting, mockable)
 - [ ] `api/shared/db`: Kysely + migrations (scenarios, runs, documents, model_calls, proposals, review_decisions)
+- [ ] Deployed stack: `DATABASE_URL` in the env schema, compose `migrate` one-shot + `dist/migrate.mjs` (Kysely custom static provider), `deploy.sh` pre-migration `pg_dump`
 - [ ] Persist-before-process for every model response
 - [ ] Batch runs: bounded concurrency + SSE progress + idempotency
 - [ ] Mock ERP tools (`lookupProduct`, `getCurrentPrice`, `getSupplierHistory`)
@@ -50,18 +71,26 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [ ] Feature `audit`: decision history
 - [ ] Feature `costs`: spend, cost/doc, automation rate, model share
 - [ ] Empty / loading / error states, responsive, basic a11y
+- [ ] API CORS allow-list (`CORS_ORIGINS`, Zod-validated)
 - [ ] ✅ Done: newcomer understands the product within a minute
 
 ## Phase 3 — Deploy & protect the public demo
-- [ ] Production Compose: restart policies, health checks, pino logs
-- [ ] Daily Postgres backup to S3
+- [ ] Production hardening: limits/healthchecks under load, rollback by `API_TAG` documented
+- [ ] `infra/scripts/backup.sh` + `infra/systemd/hexis-backup.{service,timer}` + `infra/scripts/restore-test.sh`
+- [ ] 👤 S3 backup bucket (private, SSE-S3, 14-day lifecycle, tagged) (RUNBOOK D1)
+- [ ] 👤 Inline S3 policy on `hexis-ec2-role` limited to the bucket (D2)
+- [ ] 👤 AWS CLI v2 on the host; backup timer enabled; first backup in S3 (D3–D4)
+- [ ] 👤 Restore test passes (D5) — then monthly
 - [ ] Precomputed cache for sample data
-- [ ] Per-IP rate limit + max input size
+- [ ] Per-IP rate limit (client IP via `trustProxy`) + max input size
 - [ ] Global daily spend cap → cache-only fallback
 - [ ] Kill switch env flag
-- [ ] CORS locked to `ops.hexis.fyi`
+- [ ] Production `CORS_ORIGINS` = `https://ops.hexis.fyi` only
+- [ ] Security headers on API responses
+- [ ] 👤 Production `.env` protection values + deploy (D6)
 - [ ] 👤 Vercel production deploy + env vars
-- [ ] ✅ Done: production live; simulated abuse blocked with zero spend
+- [ ] 👤 Replace NOT VERIFIED prices in `docs/infra/DECISIONS.md` §4 with real billing numbers
+- [ ] ✅ Done: production live; simulated abuse blocked with zero spend; backup in S3 and restore test passed
 - [ ] ✉️ Milestone: 2-min video + first application send-out
 
 ## Phase 4 — Trust & quality (evals)
@@ -86,3 +115,9 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - Observability (traces, metrics, alerts)
 - Portfolio polish (ADRs, case-study page, per-scenario videos)
 - Infra learning track (ECS Fargate + RDS + Terraform; GCP Cloud Run)
+- Automated deploys (OIDC + SSM), secrets in SSM Parameter Store, scheduled EBS snapshots, WAF / GuardDuty, IPv6-only API
+
+## 🗓️ Decision point — 2027-04-01 (AWS Free plan ends ≈ 2027-04-19)
+- [ ] 👤 Upgrade to Paid (if affordable) **or** export DB + config and run the full shutdown list (`docs/infra/DECISIONS.md` §14)
+- [ ] 👤 Check in Billing → Credits how long the remaining credits last after an upgrade to Paid
+- [ ] 👤 Record the decision and final numbers in `docs/dev-log.md`
