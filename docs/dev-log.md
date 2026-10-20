@@ -23,6 +23,28 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · CI workflow
+
+**Branch:** `feat/phase0-env-validation`
+**Done:**
+- `.github/workflows/ci.yml`: one `verify` job (Ubuntu, Node 24) that runs `pnpm install --frozen-lockfile`, `typecheck`, `lint` and `test`; triggers on every push and on pull requests to `main`; read-only permissions; a newer run on the same ref cancels the older one (except on `main`).
+
+**Decisions:**
+- Actions are pinned to a commit SHA taken from the official repos: `actions/checkout` v7.0.1, `pnpm/action-setup` v6.1.0, `actions/setup-node` v7.1.0 (all older than 7 days).
+- `pnpm/action-setup` rather than `pnpm/setup`: v3 of the latter requires pnpm 11 or newer and the repo pins pnpm 10.33.2. The pnpm version comes from `packageManager`.
+- Node 24 only (no matrix) and no dependency cache: install takes seconds, so the extra moving part is not worth it.
+- Cost: none. The repo is public and uses a standard GitHub-hosted runner, which is free for public repositories; no secrets, artifacts or caches are used, so the workflow cannot spend Anthropic or AWS credits. If the repo ever goes private, the free plan has a monthly minutes quota.
+
+**Verification:** run #1 (push on this branch) completed successfully in about 22 s; the same four commands pass locally. The `pull_request` trigger has not run yet.
+
+**Human actions needed:**
+- Add `verify` as a required status check in the `protect-main` ruleset.
+
+**Next:**
+- `infra/docker-compose.yml` and `Caddyfile`; then the human-only items (AWS, Anthropic key and spend limit, DNS, Vercel).
+
+---
+
 ## 2026-10-20 — Phase 0 · LICENSE
 
 **Branch:** `feat/phase0-env-validation`
