@@ -1,0 +1,6 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Do not install a version published less than 7 days ago (minutes). See the dependency-vetting skill.
+minimumReleaseAge: 10080
