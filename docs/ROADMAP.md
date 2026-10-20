@@ -8,7 +8,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 ## Phase 0 — Foundations & cost safety
 - [x] pnpm monorepo scaffold (TS strict, ESLint, Prettier, root scripts)
 - [x] `apps/web`, `apps/api`, `packages/core` skeletons
-- [ ] `GET /health` endpoint
+- [x] `GET /health` endpoint
 - [ ] `.gitignore`, `.env.example`, env validation with Zod
 - [ ] `LICENSE` (official PolyForm Noncommercial 1.0.0 text) + README license note
 - [ ] CI workflow: typecheck + lint + test
