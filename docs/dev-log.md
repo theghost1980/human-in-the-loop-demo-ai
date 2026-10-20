@@ -23,6 +23,28 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · esbuild and Vercel guide (session pause)
+
+**Branch:** `feat/phase0-env-validation`
+**Done:**
+- `esbuild` 0.28.2 vetted (already in the tree via `tsx` and `vite`, MIT, 0 dependencies, one maintainer, `postinstall` blocked by pnpm 10 and not needed) and added as a direct devDependency of `apps/api`; the lockfile grows by 3 lines.
+- `docs/infra/VERCEL.md`: step-by-step guide to publish `apps/web` at `ops.hexis.fyi`, referenced from the PLAN, the ROADMAP, RUNBOOK C4 and DECISIONS §11.
+- ROADMAP: new "Next session" block at the top with the ordered next steps for the human and the agent.
+
+**Decisions:**
+- `NEXT_PUBLIC_API_URL` is not set in Vercel in Phase 0 (the placeholder does not read it); it is added in Phase 2 together with the API CORS allow-list. RUNBOOK C4 and DECISIONS §11 were aligned.
+- Vercel facts were checked against its docs (monorepo import and automatic skipping of unaffected projects, pnpm detection, subdomain CNAME, Hobby plan terms, Node 24.x default). Namecheap labels and the "include files outside the Root Directory" option remain NOT VERIFIED.
+
+**Verification:** `pnpm audit` ✅ · typecheck ✅ · lint ✅ · tests ✅ · format:check ✅. Docker 29.9.1 works in the human's PowerShell; it is not visible from the agent's shell until the Claude app is restarted, so no image was built or tested.
+
+**Human actions needed:**
+- See the ROADMAP "Next session" block: restart the Claude app, RUNBOOK Part A and B1–B3, Anthropic limit and key, Vercel guide, hooks check in a fresh session.
+
+**Next:**
+- API `HOST` + `trustProxy` + JSON logs, then the esbuild build script, Dockerfile, compose and Caddy, the image workflow and a local smoke test.
+
+---
+
 ## 2026-10-20 — Phase 0 · infrastructure plan
 
 **Branch:** `feat/phase0-env-validation`

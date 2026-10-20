@@ -247,11 +247,11 @@ Common: one default bridge network; `restart: unless-stopped`; `mem_limit` caddy
 
 ## 11. Vercel with a pnpm monorepo
 
-**Decision (dashboard only — the Vercel CLI is blocked for agents):**
+**Decision (dashboard only — the Vercel CLI is blocked for agents; step-by-step in [`VERCEL.md`](./VERCEL.md)):**
 - Import the GitHub repo → **Root Directory: `apps/web`** → Framework preset: Next.js (auto).
-- Install/build: leave defaults; Vercel detects pnpm from the root lockfile and installs the workspace. Keep "Include files outside the Root Directory" enabled (needed for `packages/core`).
+- Install/build: leave defaults; Vercel detects pnpm from the root lockfile and installs the workspace. If the project settings show an option to include source files outside the Root Directory, keep it enabled (it matters once `apps/web` imports `packages/core`; **NOT VERIFIED** exact label).
 - **Node.js version:** 24.x in Project Settings (must satisfy `engines`).
-- **Env vars:** `NEXT_PUBLIC_API_URL=https://api.hexis.fyi` (Production). For Preview, the same value (or leave unset and use mock mode).
+- **Env vars:** none in Phase 0 (the placeholder reads none). `NEXT_PUBLIC_API_URL=https://api.hexis.fyi` (Production) is added in Phase 2, when the UI first calls the API; for Preview, the same value (or leave unset and use mock mode).
 - **Domain:** add `ops.hexis.fyi`; Vercel shows the exact CNAME target to create in Namecheap.
 - **CORS (API, from Phase 2):** the Phase 0 placeholder makes no API calls, so `CORS_ORIGINS` is introduced when the UI first calls the API (Phase 2). Production value `https://ops.hexis.fyi` (comma list; add `http://localhost:3000` only in dev). Preview deployments are **not** allowed against the production API by default.
 

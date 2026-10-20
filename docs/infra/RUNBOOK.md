@@ -232,12 +232,14 @@ Test-NetConnection api.hexis.fyi -Port 5432   # TcpTestSucceeded : False
 **Rollback to an older image:** `cd /opt/hexis/app/infra && sudo API_TAG=sha-<short> docker compose up -d api`
 
 ### C4. Vercel and the web domain · ⏱ 20 min
+Full step-by-step guide, with verification, troubleshooting and undo: [`VERCEL.md`](./VERCEL.md). Summary:
 1. Vercel → Add New → Project → import the GitHub repo.
 2. **Root Directory:** `apps/web` · Framework: Next.js · leave install/build commands as default.
-3. Settings → **Node.js Version:** 24.x.
-4. Settings → Environment Variables: `NEXT_PUBLIC_API_URL = https://api.hexis.fyi` (Production; also Preview if you want previews to call the API).
-5. Settings → Domains → add `ops.hexis.fyi` → copy the **exact** CNAME target Vercel shows.
-6. Namecheap → Advanced DNS → `CNAME Record` · Host `ops` · Value = that target · TTL Automatic.
+3. Settings → **Node.js Version:** 24.x (it is the default).
+4. Settings → Domains → add `ops.hexis.fyi` → copy the **exact** CNAME target Vercel shows.
+5. Namecheap → Advanced DNS → `CNAME Record` · Host `ops` · Value = that target · TTL Automatic.
+
+`NEXT_PUBLIC_API_URL` is **not** needed yet: the placeholder does not read it. Add it in Phase 2, when the UI first calls the API.
 
 **PowerShell**
 ```powershell

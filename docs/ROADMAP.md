@@ -5,6 +5,29 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 
 ---
 
+## ▶ Next session — where we stopped (2026-10-20)
+
+**State:** Phase 0 scaffold, CI, LICENSE, env validation and the infrastructure plan are done; `esbuild` is approved and added. Docker Desktop is installed (29.9.1) but the Claude app must be **restarted** so it sees `docker` in its PATH.
+
+**Human (free, any order):**
+1. Restart the Claude app; check that Docker Desktop is running (`docker info`).
+2. RUNBOOK Part A (root MFA, admin user, budgets) and B1–B3 (role, security group, emergency key pair).
+3. Anthropic: monthly spend limit and a dedicated production key (password manager only, never in chats).
+4. Vercel + `ops.hexis.fyi`: follow [`docs/infra/VERCEL.md`](./infra/VERCEL.md).
+5. Verify the guardrail hooks in a fresh Claude Code session (`npm --version` must be blocked from Bash and PowerShell).
+
+**Do NOT do yet:** launch EC2 or the Elastic IP, create the `api` DNS record, change the GHCR package visibility.
+
+**Agent (one commit per step, same branch):**
+1. API: `HOST` in the env schema (+ tests), `trustProxy`, JSON logs.
+2. `apps/api/scripts/build.ts` + `build` script; check `node dist/server.mjs` → `/health`.
+3. `apps/api/Dockerfile` + `.dockerignore`; local `docker build` (needs Docker visible to the agent).
+4. `infra/compose.yaml`, `compose.dev.yaml`, `Caddyfile`, `env.*.example`, `deploy.sh` (vet the `caddy` and `postgres` images first).
+5. `.github/workflows/api-image.yml`. **Decision needed:** it is designed to run on `main`; to test it earlier, either add a temporary push trigger for this branch or merge to `main` through a PR (whether a manual run from a feature branch is possible is NOT VERIFIED).
+6. Local smoke test of the whole stack with Docker.
+
+---
+
 ## Phase 0 — Foundations & cost safety
 - [x] pnpm monorepo scaffold (TS strict, ESLint, Prettier, root scripts)
 - [x] `apps/web`, `apps/api`, `packages/core` skeletons
@@ -12,7 +35,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [x] `.gitignore`, `.env.example`, env validation with Zod
 - [x] `LICENSE` (official PolyForm Noncommercial 1.0.0 text) + README license note
 - [x] CI workflow: typecheck + lint + test
-- [ ] Dependency-vetting report for `esbuild` (approved by human) → add as `apps/api` devDependency
+- [x] Dependency-vetting report for `esbuild` (approved by human) → add as `apps/api` devDependency
 - [ ] API: env schema gains `HOST` only; `trustProxy`; pino JSON logs
 - [ ] API: `scripts/build.ts` (run with `tsx`; esbuild bundle → `dist/server.mjs`) + `build` script; `node dist/server.mjs` serves `/health` locally
 - [ ] `apps/api/Dockerfile` (multi-stage, non-root, healthcheck, all workspace manifests copied) + root `.dockerignore` (`apps/web/*` + `!apps/web/package.json`); local `docker build` OK
@@ -32,7 +55,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [ ] 👤 Namecheap: `A api → Elastic IP` (C1)
 - [ ] 👤 GHCR package `hexis-ops-api` set to public after the first image build (C2)
 - [ ] 👤 First deploy: clone to `/opt/hexis/app`, `infra/.env` (600, root), `docker compose up -d` (C3)
-- [ ] 👤 Vercel project (root `apps/web`, Node 24.x, `NEXT_PUBLIC_API_URL`) + `ops.hexis.fyi` + Namecheap CNAME (C4)
+- [ ] 👤 Vercel project (root `apps/web`, Node 24.x) + `ops.hexis.fyi` + Namecheap CNAME — [`docs/infra/VERCEL.md`](./infra/VERCEL.md) (C4); `NEXT_PUBLIC_API_URL` waits for Phase 2
 - [ ] 👤 Anthropic: production API key + monthly spend limit (C5)
 - [ ] 👤 Activate `project` cost allocation tag; record IDs, IP and credit end date in dev-log (C6)
 - [ ] 👤 Calendar reminders: 2027-03-01 credit pace check (≥ $80 left) · 2027-04-01 end-of-free-plan decision

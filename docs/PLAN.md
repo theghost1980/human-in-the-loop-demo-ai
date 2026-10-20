@@ -55,7 +55,7 @@ Portfolio project by **Saturno Mangieri**. Source available under **PolyForm Non
 | Server access | AWS Systems Manager Session Manager (no SSH port open) |
 | Domain | `ops.hexis.fyi` (web), `api.hexis.fyi` (api) — DNS at Namecheap |
 
-Infrastructure details and their rationale: [`docs/infra/DECISIONS.md`](infra/DECISIONS.md). Step-by-step setup: [`docs/infra/RUNBOOK.md`](infra/RUNBOOK.md).
+Infrastructure details and their rationale: [`docs/infra/DECISIONS.md`](infra/DECISIONS.md). Step-by-step setup: [`docs/infra/RUNBOOK.md`](infra/RUNBOOK.md). Web (Vercel) setup, step by step: [`docs/infra/VERCEL.md`](infra/VERCEL.md).
 
 ### Layering rules
 
@@ -142,7 +142,7 @@ Each phase ends with the **close-out checklist** of the `task-closure` skill (`.
 - **AWS (human, Free plan, eu-north-1):** root MFA without access keys; admin IAM user with MFA; budget USD 30/month (alerts 50/80/100 % + forecast, credits excluded); Cost Anomaly Detection (USD 5); `project=hexis-ops` tags; instance role with `AmazonSSMManagedInstanceCore`; security group 80/443 only (no SSH — access through Session Manager; emergency key pair kept in the password manager); `t4g.small` Ubuntu 24.04 arm64, 20 GiB gp3 encrypted, IMDSv2 required; Elastic IP; host setup (2 GiB swap, Docker Engine + Compose plugin from Docker's repo, Docker log rotation, unattended security upgrades with 04:00 reboot).
 - **DNS (human, Namecheap):** `A api → Elastic IP` (5-min TTL during setup), `CNAME ops →` the target Vercel shows. No AAAA, no CAA.
 - **First deploy (human):** `git clone` of the public repo to `/opt/hexis/app`, root-only `infra/.env` (mode 600) filled from the password manager, `docker compose up -d`.
-- **Vercel (human):** Root Directory `apps/web`, Node 24.x, `NEXT_PUBLIC_API_URL=https://api.hexis.fyi`, domain `ops.hexis.fyi`.
+- **Vercel (human):** Root Directory `apps/web`, Node 24.x (the default), domain `ops.hexis.fyi`; step by step in [`docs/infra/VERCEL.md`](infra/VERCEL.md). `NEXT_PUBLIC_API_URL` is added in Phase 2, when the web first calls the API.
 - **Anthropic (human):** dedicated production API key, monthly spend limit set in the console.
 
 **Done when:** `https://api.hexis.fyi/health` returns OK over HTTPS from a fresh image pulled from GHCR, port 5432 is closed from the internet, `https://ops.hexis.fyi` serves the placeholder page, CI and the image workflow are green, and the runbook steps are recorded in the dev-log.
