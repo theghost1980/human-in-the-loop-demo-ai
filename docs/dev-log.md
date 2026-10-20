@@ -23,6 +23,33 @@ Newest entries on top. One entry per closed roadmap item or phase.
 - ...
 -->
 
+## 2026-10-20 — Phase 0 · infrastructure plan
+
+**Branch:** `feat/phase0-env-validation`
+**Done:**
+- `docs/infra/DECISIONS.md` (16 decisions with rationale, discarded alternatives and how to verify each) and `docs/infra/RUNBOOK.md` (from an empty AWS account to `https://api.hexis.fyi/health`, with undo steps); PLAN and ROADMAP rewritten for Phases 0 to 3 (migrations move to Phase 1, CORS to Phase 2).
+- Guardrails now ask before `ssh`, `scp` and `rsync` (104 hook cases).
+
+**Decisions:**
+- The repository keeps its name; *Hexis Ops* is the product name; the demo runs on `hexis.fyi` (`ops.` for the web, `api.` for the API).
+- `t4g.small` on Ubuntu 24.04, access through Session Manager (no port 22), image built in GitHub Actions with the Docker CLI only and pulled from GHCR, API bundled with esbuild.
+- No service uses `env_file`: non-secret constants live in `compose.yaml`; `infra/.env` holds only secrets and per-environment values. The example files are `infra/env.*.example` (no leading dot) because the agent guardrails block `.env.*`.
+- The Phase 0 stack is caddy + api + postgres; `migrate` and `DATABASE_URL` arrive in Phase 1, `CORS_ORIGINS` in Phase 2.
+- EC2 is launched late, after an optional short test (RUNBOOK B3b), to avoid burning credits while the code is not ready.
+- `pnpm fetch` + `--offline` was valued and not adopted (no benefit in CI, extra downloads).
+
+**Verification:** hooks suite 104/104 ✅ · format:check ✅ · typecheck ✅ · lint ✅ · tests ✅ · CI run #2 on GitHub ✅ (~24 s). Checked independently: `t4g.small` is Free-plan eligible, what happens when the Free plan ends, free arm64 runners with Docker, SSM Agent on Ubuntu 24.04, Postgres 18 volume path, Vercel Node 24.x.
+Still NOT VERIFIED: eu-north-1 prices; Free-plan access to Systems Manager, Budgets and Cost Anomaly Detection; `GITHUB_TOKEN` creating the GHCR package on the first push (fallback documented); Corepack inside the Node image; the frozen install with `apps/web` excluded from the build context.
+
+**Human actions needed:**
+- Start RUNBOOK Part A (account safety, budgets) and B1–B3: they cost nothing.
+- Replace every NOT VERIFIED value with what the consoles show.
+
+**Next:**
+- Vet `esbuild` as a direct dependency of `apps/api`; API `HOST` and `trustProxy`; Dockerfile; compose and Caddy; image workflow; local smoke test with Docker Desktop.
+
+---
+
 ## 2026-10-20 — Phase 0 · CI workflow
 
 **Branch:** `feat/phase0-env-validation`

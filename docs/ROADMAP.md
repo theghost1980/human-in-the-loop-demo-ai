@@ -22,7 +22,7 @@ Details for every item live in [`PLAN.md`](./PLAN.md). Update this file at the c
 - [ ] `infra/scripts/deploy.sh` (git pull → compose pull → up -d → prune; the pre-migration dump arrives in Phase 1)
 - [ ] Local smoke test: `docker compose -f infra/compose.yaml --env-file infra/.env.local up --build` → `http://localhost/health` OK
 - [ ] `.github/workflows/api-image.yml` (ubuntu-24.04-arm; Docker CLI + `GITHUB_TOKEN`, no third-party actions → GHCR `main` + `sha-<short>`, label → this repo)
-- [ ] `docs/infra/DECISIONS.md` + `docs/infra/RUNBOOK.md` in the repo
+- [x] `docs/infra/DECISIONS.md` + `docs/infra/RUNBOOK.md` in the repo
 - [ ] 👤 AWS account safety: root MFA + no keys, admin IAM user with MFA (RUNBOOK A1–A2)
 - [ ] 👤 AWS Budgets USD 30 (credits excluded) + Cost Anomaly Detection USD 5; note credit balance and end date (A3)
 - [ ] 👤 IAM role `hexis-ec2-role` (SSM) + security group 80/443 + emergency key pair (B1–B3)
